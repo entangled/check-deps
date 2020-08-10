@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Johan Hidding" />
+  <title>Dependecy checker in Python</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  background-color: #f8f8f8; }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ef2929; } /* Alert */
+code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #c4a000; } /* Attribute */
+code span.bn { color: #0000cf; } /* BaseN */
+code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4e9a06; } /* Char */
+code span.cn { color: #000000; } /* Constant */
+code span.co { color: #8f5902; font-style: italic; } /* Comment */
+code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+code span.dt { color: #204a87; } /* DataType */
+code span.dv { color: #0000cf; } /* DecVal */
+code span.er { color: #a40000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #0000cf; } /* Float */
+code span.fu { color: #000000; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+code span.ot { color: #8f5902; } /* Other */
+code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+code span.sc { color: #000000; } /* SpecialChar */
+code span.ss { color: #4e9a06; } /* SpecialString */
+code span.st { color: #4e9a06; } /* String */
+code span.va { color: #000000; } /* Variable */
+code span.vs { color: #4e9a06; } /* VerbatimString */
+code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <!-- Bootstrap 4.5.0 stylesheet -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+  <link rel="stylesheet" href="css/mods.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+<!-- <script data-main="scripts/main" src="js/require.js"></script> -->
+  <!-- Load React. -->
+  <!-- Note: when deploying, replace "development.js" with "production.min.js". -->
+<!--  <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script> -->
+
+
+</head>
+<body class="d-flex flex-column">
+
+<nav id="TOC" class="navbar navbar-dark bg-dark">
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <a href="#" class="ml-5 mr-auto navbar-brand">Dependecy checker in Python<br><span style="font-size: smaller"> 
+        by <i>Johan Hidding</i></span></a>
+<div class="collapse navbar-collapse" id="navbarSupportedContent">
+<ul>
+<li><a href="#configuration">Configuration</a></li>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#types">Types</a></li>
+<li><a href="#parsers">Parsers</a></li>
+<li><a href="#main">Main</a></li>
+</ul>
+</div>
+</nav>
+
+<!-- <nav class="navbar navbar-dark navbar-expand-md bg-dark mb-4">
+<p class="author">Johan Hidding</p>
+</nav>
+ -->
+
+<main role="main" class="flex-fill"><div class="container my-5">
+<p>It struck me that, to get an Entangled/Bootstrap project to work, you need quite a few things installed. I wanted to have a script that checks all the dependencies and then reports back to the user. This script should follow these guidelines:</p>
+<ul>
+<li>require very little to run: It is beyond my Bash skills to implement this in pure Bash, so instead I settled on vanilla <strong>Python</strong>.</li>
+<li>be configurable: Python has a builtin parser for <code>ini</code> files.</li>
+<li>run efficiently: This is my chance to get my hands dirty with <code>asyncio</code>.</li>
+</ul>
+<h1 id="configuration">Configuration</h1>
+<p>The idea is to have a <code>dependencies.ini</code> file with entries that look as follows:</p>
+<div class="annotated-code">
+<p><span><em>«dependencies.ini»=</em></span></p>
+<div class="sourceCode" id="cb1" data-file="dependencies.ini"><pre class="sourceCode ini"><code class="sourceCode ini"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">[python]</span></span>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="dt">require </span><span class="ot">=</span><span class="st"> &gt;=</span><span class="fl">3.8</span></span>
+<span id="cb1-3"><a href="#cb1-3"></a><span class="dt">get_version </span><span class="ot">=</span><span class="st"> python3 --version</span></span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="dt">pattern </span><span class="ot">=</span><span class="st"> Python (.*)</span></span></code></pre></div>
+</div>
+<p>The script will then run <code>python3 --version</code> and match the output to the regular expression <code>Python (.*)</code>, from which a version number is extracted. This version is then compared to the requirement <code>&gt;=3.8</code>.</p>
+<p>Some version constraints may depend on other software to be present.</p>
+<div class="annotated-code">
+<p><span><em>«dependencies.ini»+</em></span></p>
+<div class="sourceCode" id="cb2" data-file="dependencies.ini"><pre class="sourceCode ini"><code class="sourceCode ini"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">[pip]</span></span>
+<span id="cb2-2"><a href="#cb2-2"></a><span class="dt">require </span><span class="ot">=</span><span class="st"> &gt;=</span><span class="dv">19</span></span>
+<span id="cb2-3"><a href="#cb2-3"></a><span class="dt">get_version </span><span class="ot">=</span><span class="st"> pip --version</span></span>
+<span id="cb2-4"><a href="#cb2-4"></a><span class="dt">pattern </span><span class="ot">=</span><span class="st"> pip ([</span><span class="dv">0</span><span class="fl">-9.</span><span class="st">]*)</span></span>
+<span id="cb2-5"><a href="#cb2-5"></a><span class="dt">depends </span><span class="ot">=</span><span class="st"> python</span></span></code></pre></div>
+</div>
+<p>If we have many Python packages to check for, it may be easier to do so through a template</p>
+<div class="annotated-code">
+<p><span><em>«dependencies.ini»+</em></span></p>
+<div class="sourceCode" id="cb3" data-file="dependencies.ini"><pre class="sourceCode ini"><code class="sourceCode ini"><span id="cb3-1"><a href="#cb3-1"></a><span class="kw">[template:pip]</span></span>
+<span id="cb3-2"><a href="#cb3-2"></a><span class="dt">get_version </span><span class="ot">=</span><span class="st"> pip show {name} | grep &quot;Version:&quot;</span></span>
+<span id="cb3-3"><a href="#cb3-3"></a><span class="dt">pattern </span><span class="ot">=</span><span class="st"> Version: (.*)</span></span>
+<span id="cb3-4"><a href="#cb3-4"></a><span class="dt">suggestion_text </span><span class="ot">=</span><span class="st"> This is a Python package that can be installed through pip.</span></span>
+<span id="cb3-5"><a href="#cb3-5"></a><span class="dt">suggestion </span><span class="ot">=</span><span class="st"> pip install {name}</span></span>
+<span id="cb3-6"><a href="#cb3-6"></a><span class="dt">depends </span><span class="ot">=</span><span class="st"> python,pip</span></span></code></pre></div>
+</div>
+<p>For instance, if we want to check the version of Numpy:</p>
+<div class="annotated-code">
+<p><span><em>«dependencies.ini»+</em></span></p>
+<div class="sourceCode" id="cb4" data-file="dependencies.ini"><pre class="sourceCode ini"><code class="sourceCode ini"><span id="cb4-1"><a href="#cb4-1"></a><span class="kw">[numpy]</span></span>
+<span id="cb4-2"><a href="#cb4-2"></a><span class="dt">template </span><span class="ot">=</span><span class="st"> pip</span></span>
+<span id="cb4-3"><a href="#cb4-3"></a><span class="dt">require </span><span class="ot">=</span><span class="st"> &gt;=</span><span class="fl">1.0</span></span></code></pre></div>
+</div>
+<h1 id="overview">Overview</h1>
+<p>The script looks as follows</p>
+<div class="annotated-code">
+<p><span><em>«check-deps.py»=</em></span></p>
+<div class="sourceCode" id="cb5" data-file="check-deps.py"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1"></a><span class="im">from</span> __future__ <span class="im">import</span> annotations</span>
+<span id="cb5-2"><a href="#cb5-2"></a></span>
+<span id="cb5-3"><a href="#cb5-3"></a><span class="im">import</span> sys</span>
+<span id="cb5-4"><a href="#cb5-4"></a><span class="im">import</span> io</span>
+<span id="cb5-5"><a href="#cb5-5"></a><span class="im">import</span> configparser</span>
+<span id="cb5-6"><a href="#cb5-6"></a><span class="im">import</span> asyncio</span>
+<span id="cb5-7"><a href="#cb5-7"></a><span class="im">import</span> re</span>
+<span id="cb5-8"><a href="#cb5-8"></a></span>
+<span id="cb5-9"><a href="#cb5-9"></a><span class="op">&lt;&lt;</span>imports<span class="op">&gt;&gt;</span></span>
+<span id="cb5-10"><a href="#cb5-10"></a><span class="op">&lt;&lt;</span><span class="cf">async</span><span class="op">-</span>cache<span class="op">&gt;&gt;</span></span>
+<span id="cb5-11"><a href="#cb5-11"></a><span class="op">&lt;&lt;</span>types<span class="op">&gt;&gt;</span></span>
+<span id="cb5-12"><a href="#cb5-12"></a><span class="op">&lt;&lt;</span>parsers<span class="op">&gt;&gt;</span></span>
+<span id="cb5-13"><a href="#cb5-13"></a><span class="op">&lt;&lt;</span>helper<span class="op">-</span>functions<span class="op">&gt;&gt;</span></span>
+<span id="cb5-14"><a href="#cb5-14"></a></span>
+<span id="cb5-15"><a href="#cb5-15"></a><span class="cf">async</span> <span class="kw">def</span> main():</span>
+<span id="cb5-16"><a href="#cb5-16"></a>    <span class="op">&lt;&lt;</span>main<span class="op">&gt;&gt;</span></span>
+<span id="cb5-17"><a href="#cb5-17"></a></span>
+<span id="cb5-18"><a href="#cb5-18"></a>asyncio.run(main())</span></code></pre></div>
+</div>
+<p>We start by declaring some types and methods on those types, then implement some parsers that we need to parse version numbers and version constraints. After that we can fill in the <code>main</code> function.</p>
+<h1 id="types">Types</h1>
+<p>This script is heavy on type hints and data classes, as I think every modern Python script should.</p>
+<div class="annotated-code">
+<p><span><em>«imports»=</em></span></p>
+<div class="sourceCode" id="imports"><pre class="sourceCode python"><code class="sourceCode python"><span id="imports-1"><a href="#imports-1"></a><span class="im">from</span> dataclasses <span class="im">import</span> dataclass, field</span>
+<span id="imports-2"><a href="#imports-2"></a><span class="im">from</span> typing <span class="im">import</span> Optional, List, Mapping, Tuple, Callable, TypeVar</span></code></pre></div>
+</div>
+<p>We have two custom exceptions that may occur: <code>ConfigError</code> for errors in the config file and <code>ParserError</code> for errors in parsing version numbers.</p>
+<div class="annotated-code">
+<p><span><em>«types»=</em></span></p>
+<div class="sourceCode" id="types"><pre class="sourceCode python"><code class="sourceCode python"><span id="types-1"><a href="#types-1"></a><span class="kw">class</span> ConfigError(<span class="pp">Exception</span>):</span>
+<span id="types-2"><a href="#types-2"></a>    <span class="cf">pass</span></span>
+<span id="types-3"><a href="#types-3"></a></span>
+<span id="types-4"><a href="#types-4"></a><span class="kw">class</span> ParserError(<span class="pp">Exception</span>):</span>
+<span id="types-5"><a href="#types-5"></a>    <span class="cf">pass</span></span></code></pre></div>
+</div>
+<h2 id="versions">Versions</h2>
+<p>Versions usually come as a set of integers separated by points, and may contain a non-numerical suffix.</p>
+<div class="annotated-code">
+<p><span><em>«types»+</em></span></p>
+<div class="sourceCode" id="types"><pre class="sourceCode python"><code class="sourceCode python"><span id="types-1"><a href="#types-1"></a><span class="at">@dataclass</span></span>
+<span id="types-2"><a href="#types-2"></a><span class="kw">class</span> Version:</span>
+<span id="types-3"><a href="#types-3"></a>    number: Tuple[<span class="bu">int</span>, ...]</span>
+<span id="types-4"><a href="#types-4"></a>    extra: Optional[<span class="bu">str</span>]</span>
+<span id="types-5"><a href="#types-5"></a></span>
+<span id="types-6"><a href="#types-6"></a>    <span class="op">&lt;&lt;</span>version<span class="op">-</span>methods<span class="op">&gt;&gt;</span></span></code></pre></div>
+</div>
+<p>To perform comparisons we look at major version first and than move down to minor versions.</p>
+<div class="annotated-code">
+<p><span><em>«version-methods»=</em></span></p>
+<div class="sourceCode" id="version-methods"><pre class="sourceCode python"><code class="sourceCode python"><span id="version-methods-1"><a href="#version-methods-1"></a><span class="kw">def</span> _less_than(<span class="va">self</span>, other, when_equal):</span>
+<span id="version-methods-2"><a href="#version-methods-2"></a>    <span class="cf">for</span> n, m <span class="kw">in</span> <span class="bu">zip</span>(<span class="va">self</span>.number, other.number):</span>
+<span id="version-methods-3"><a href="#version-methods-3"></a>        <span class="cf">if</span> n <span class="op">&lt;</span> m:</span>
+<span id="version-methods-4"><a href="#version-methods-4"></a>            <span class="cf">return</span> <span class="va">True</span></span>
+<span id="version-methods-5"><a href="#version-methods-5"></a>        <span class="cf">elif</span> n <span class="op">&gt;</span> m:</span>
+<span id="version-methods-6"><a href="#version-methods-6"></a>            <span class="cf">return</span> <span class="va">False</span></span>
+<span id="version-methods-7"><a href="#version-methods-7"></a>    <span class="cf">return</span> when_equal</span></code></pre></div>
+</div>
+<p>Using the <code>_less_than</code> helper method we can define the four inequality operators:</p>
+<div class="annotated-code">
+<p><span><em>«version-methods»+</em></span></p>
+<div class="sourceCode" id="version-methods"><pre class="sourceCode python"><code class="sourceCode python"><span id="version-methods-1"><a href="#version-methods-1"></a><span class="kw">def</span> <span class="fu">__lt__</span>(<span class="va">self</span>, other):</span>
+<span id="version-methods-2"><a href="#version-methods-2"></a>    <span class="cf">return</span> <span class="va">self</span>._less_than(other, when_equal<span class="op">=</span><span class="va">False</span>)</span>
+<span id="version-methods-3"><a href="#version-methods-3"></a></span>
+<span id="version-methods-4"><a href="#version-methods-4"></a><span class="kw">def</span> <span class="fu">__gt__</span>(<span class="va">self</span>, other):</span>
+<span id="version-methods-5"><a href="#version-methods-5"></a>    <span class="cf">return</span> other._less_than(<span class="va">self</span>, when_equal<span class="op">=</span><span class="va">False</span>)</span>
+<span id="version-methods-6"><a href="#version-methods-6"></a></span>
+<span id="version-methods-7"><a href="#version-methods-7"></a><span class="kw">def</span> <span class="fu">__le__</span>(<span class="va">self</span>, other):</span>
+<span id="version-methods-8"><a href="#version-methods-8"></a>    <span class="cf">return</span> <span class="va">self</span>._less_than(other, when_equal<span class="op">=</span><span class="va">True</span>)</span>
+<span id="version-methods-9"><a href="#version-methods-9"></a></span>
+<span id="version-methods-10"><a href="#version-methods-10"></a><span class="kw">def</span> <span class="fu">__ge__</span>(<span class="va">self</span>, other):</span>
+<span id="version-methods-11"><a href="#version-methods-11"></a>    <span class="cf">return</span> other._less_than(<span class="va">self</span>, when_equal<span class="op">=</span><span class="va">True</span>)</span></code></pre></div>
+</div>
+<p>Remains equality and inequalty:</p>
+<div class="annotated-code">
+<p><span><em>«version-methods»+</em></span></p>
+<div class="sourceCode" id="version-methods"><pre class="sourceCode python"><code class="sourceCode python"><span id="version-methods-1"><a href="#version-methods-1"></a><span class="kw">def</span> <span class="fu">__eq__</span>(<span class="va">self</span>, other):</span>
+<span id="version-methods-2"><a href="#version-methods-2"></a>    <span class="cf">for</span> n, m <span class="kw">in</span> <span class="bu">zip</span>(<span class="va">self</span>.number, other.number):</span>
+<span id="version-methods-3"><a href="#version-methods-3"></a>        <span class="cf">if</span> n <span class="op">!=</span> m:</span>
+<span id="version-methods-4"><a href="#version-methods-4"></a>            <span class="cf">return</span> <span class="va">False</span></span>
+<span id="version-methods-5"><a href="#version-methods-5"></a>        <span class="cf">return</span> <span class="va">True</span></span>
+<span id="version-methods-6"><a href="#version-methods-6"></a></span>
+<span id="version-methods-7"><a href="#version-methods-7"></a><span class="kw">def</span> <span class="fu">__ne__</span>(<span class="va">self</span>, other):</span>
+<span id="version-methods-8"><a href="#version-methods-8"></a>    <span class="cf">return</span> <span class="kw">not</span> <span class="va">self</span> <span class="op">==</span> other</span></code></pre></div>
+</div>
+<p>And conversion to string:</p>
+<div class="annotated-code">
+<p><span><em>«version-methods»+</em></span></p>
+<div class="sourceCode" id="version-methods"><pre class="sourceCode python"><code class="sourceCode python"><span id="version-methods-1"><a href="#version-methods-1"></a><span class="kw">def</span> <span class="fu">__str__</span>(<span class="va">self</span>):</span>
+<span id="version-methods-2"><a href="#version-methods-2"></a>    <span class="cf">return</span> <span class="st">&quot;.&quot;</span>.join(<span class="bu">map</span>(<span class="bu">str</span>, <span class="va">self</span>.number)) <span class="op">+</span> (<span class="va">self</span>.extra <span class="kw">or</span> <span class="st">&quot;&quot;</span>)</span></code></pre></div>
+</div>
+<h2 id="relation">Relation</h2>
+<p>The <code>Relation</code> type encodes the requested ordinal relation with a given version number. This is an <code>Enum</code> containing the <code>LT</code>, <code>GT</code>, <code>LE</code>, <code>GE</code>, <code>EQ</code> and <code>NE</code> values, each corresponding to their repsective magic method counterparts (i.e. <code>LT</code> with <code>__lt__</code>, and so on).</p>
+<div class="annotated-code">
+<p><span><em>«imports»+</em></span></p>
+<div class="sourceCode" id="imports"><pre class="sourceCode python"><code class="sourceCode python"><span id="imports-1"><a href="#imports-1"></a><span class="im">from</span> enum <span class="im">import</span> Enum</span></code></pre></div>
+</div>
+<div class="annotated-code">
+<p><span><em>«types»+</em></span></p>
+<div class="sourceCode" id="types"><pre class="sourceCode python"><code class="sourceCode python"><span id="types-1"><a href="#types-1"></a><span class="kw">class</span> Relation(Enum):</span>
+<span id="types-2"><a href="#types-2"></a>    GE <span class="op">=</span> <span class="dv">1</span></span>
+<span id="types-3"><a href="#types-3"></a>    LE <span class="op">=</span> <span class="dv">2</span></span>
+<span id="types-4"><a href="#types-4"></a>    LT <span class="op">=</span> <span class="dv">3</span></span>
+<span id="types-5"><a href="#types-5"></a>    GT <span class="op">=</span> <span class="dv">4</span></span>
+<span id="types-6"><a href="#types-6"></a>    EQ <span class="op">=</span> <span class="dv">5</span></span>
+<span id="types-7"><a href="#types-7"></a>    NE <span class="op">=</span> <span class="dv">6</span></span>
+<span id="types-8"><a href="#types-8"></a></span>
+<span id="types-9"><a href="#types-9"></a>    <span class="kw">def</span> <span class="fu">__str__</span>(<span class="va">self</span>):</span>
+<span id="types-10"><a href="#types-10"></a>        <span class="cf">return</span> {<span class="st">&quot;GE&quot;</span>: <span class="st">&quot;&gt;=&quot;</span>, <span class="st">&quot;LE&quot;</span>: <span class="st">&quot;&lt;=&quot;</span>, <span class="st">&quot;LT&quot;</span>: <span class="st">&quot;&lt;&quot;</span>,</span>
+<span id="types-11"><a href="#types-11"></a>                <span class="st">&quot;GT&quot;</span>: <span class="st">&quot;&gt;&quot;</span>, <span class="st">&quot;EQ&quot;</span>: <span class="st">&quot;==&quot;</span>, <span class="st">&quot;NE&quot;</span>: <span class="st">&quot;!=&quot;</span>}[<span class="va">self</span>.name]</span></code></pre></div>
+</div>
+<h2 id="version-constraint">Version constraint</h2>
+<p>A version constraint is a relation with a version. It is a callable object that will perform the comparison with the found version.</p>
+<div class="annotated-code">
+<p><span><em>«types»+</em></span></p>
+<div class="sourceCode" id="types"><pre class="sourceCode python"><code class="sourceCode python"><span id="types-1"><a href="#types-1"></a><span class="at">@dataclass</span></span>
+<span id="types-2"><a href="#types-2"></a><span class="kw">class</span> VersionConstraint:</span>
+<span id="types-3"><a href="#types-3"></a>    version: Version</span>
+<span id="types-4"><a href="#types-4"></a>    relation: Relation</span>
+<span id="types-5"><a href="#types-5"></a></span>
+<span id="types-6"><a href="#types-6"></a>    <span class="kw">def</span> <span class="fu">__call__</span>(<span class="va">self</span>, other: Version) <span class="op">-&gt;</span> <span class="bu">bool</span>:</span>
+<span id="types-7"><a href="#types-7"></a>        method <span class="op">=</span> <span class="ss">f&quot;__</span><span class="sc">{</span><span class="va">self</span><span class="sc">.</span>relation<span class="sc">.</span>name<span class="sc">}</span><span class="ss">__&quot;</span>.lower()</span>
+<span id="types-8"><a href="#types-8"></a>        <span class="cf">return</span> <span class="bu">getattr</span>(other, method)(<span class="va">self</span>.version)</span>
+<span id="types-9"><a href="#types-9"></a></span>
+<span id="types-10"><a href="#types-10"></a>    <span class="kw">def</span> <span class="fu">__str__</span>(<span class="va">self</span>):</span>
+<span id="types-11"><a href="#types-11"></a>        <span class="cf">return</span> <span class="ss">f&quot;</span><span class="sc">{</span><span class="va">self</span><span class="sc">.</span>relation<span class="sc">}{</span><span class="va">self</span><span class="sc">.</span>version<span class="sc">}</span><span class="ss">&quot;</span></span></code></pre></div>
+</div>
+<h2 id="versiontest">VersionTest</h2>
+<p>The <code>VersionTest</code> class contains all information from each section in the configuration file. We’ll go through this line by line. The <code>run</code> method will be treated in the section on the <code>main</code> function, since it is integral to the control flow of the script.</p>
+<div class="annotated-code">
+<p><span><em>«types»+</em></span></p>
+<div class="sourceCode" id="types"><pre class="sourceCode python"><code class="sourceCode python"><span id="types-1"><a href="#types-1"></a><span class="at">@dataclass</span></span>
+<span id="types-2"><a href="#types-2"></a><span class="kw">class</span> VersionTest:</span>
+<span id="types-3"><a href="#types-3"></a>    <span class="op">&lt;&lt;</span>version<span class="op">-</span>test<span class="op">-</span>fields<span class="op">&gt;&gt;</span></span>
+<span id="types-4"><a href="#types-4"></a>    <span class="op">&lt;&lt;</span>version<span class="op">-</span>test<span class="op">-</span>run<span class="op">&gt;&gt;</span></span></code></pre></div>
+</div>
+<p>The main three fields are <code>name</code>, <code>require</code> and <code>get_version</code>. The <code>name</code> field is filled with the section title in the init file, the <code>require</code> field contains the version constraint and <code>get_version</code> is a piece of shell script that should give the version number.</p>
+<div class="annotated-code">
+<p><span><em>«version-test-fields»=</em></span></p>
+<div class="sourceCode" id="version-test-fields"><pre class="sourceCode python"><code class="sourceCode python"><span id="version-test-fields-1"><a href="#version-test-fields-1"></a>name: <span class="bu">str</span></span>
+<span id="version-test-fields-2"><a href="#version-test-fields-2"></a>require: VersionConstraint</span>
+<span id="version-test-fields-3"><a href="#version-test-fields-3"></a>get_version: <span class="bu">str</span></span></code></pre></div>
+</div>
+<p>In many cases you will want to run an additional regular expression on top of the shell one-liner to get the version. Many programs output way too much information, when all we want is the version (try <code>bash --version</code> for instance). To prevent <code>sed</code> commands on every turn, there is an optional field <code>pattern</code> that should contain a regular expression that has the version number as the first sub-group.</p>
+<div class="annotated-code">
+<p><span><em>«version-test-fields»+</em></span></p>
+<div class="sourceCode" id="version-test-fields"><pre class="sourceCode python"><code class="sourceCode python"><span id="version-test-fields-1"><a href="#version-test-fields-1"></a>pattern: Optional[<span class="bu">str</span>] <span class="op">=</span> <span class="va">None</span></span></code></pre></div>
+</div>
+<p>If the version check fails it is nice to give the user some info on how to upgrade to a more recent version. We have one field for human-readable suggestions and one field for possible script lines.</p>
+<div class="annotated-code">
+<p><span><em>«version-test-fields»+</em></span></p>
+<div class="sourceCode" id="version-test-fields"><pre class="sourceCode python"><code class="sourceCode python"><span id="version-test-fields-1"><a href="#version-test-fields-1"></a>suggestion_text: Optional[<span class="bu">str</span>] <span class="op">=</span> <span class="va">None</span></span>
+<span id="version-test-fields-2"><a href="#version-test-fields-2"></a>suggestion: Optional[<span class="bu">str</span>] <span class="op">=</span> <span class="va">None</span></span></code></pre></div>
+</div>
+<p>Some programs depend on other programs to even be able to check the version. For instance if the executable is part of a Python package that can be installed with <code>pip</code>, we need <code>pip</code> to check for the package version. You can enter a (comma-separated) list of names to give dependencies.</p>
+<div class="annotated-code">
+<p><span><em>«version-test-fields»+</em></span></p>
+<div class="sourceCode" id="version-test-fields"><pre class="sourceCode python"><code class="sourceCode python"><span id="version-test-fields-1"><a href="#version-test-fields-1"></a>depends: List[<span class="bu">str</span>] <span class="op">=</span> field(default_factory<span class="op">=</span><span class="bu">list</span>)</span></code></pre></div>
+</div>
+<p>For the same use-case it is nice to have a template for <code>pip</code> or <code>npm</code> packages.</p>
+<div class="annotated-code">
+<p><span><em>«version-test-fields»+</em></span></p>
+<div class="sourceCode" id="version-test-fields"><pre class="sourceCode python"><code class="sourceCode python"><span id="version-test-fields-1"><a href="#version-test-fields-1"></a>template: Optional[<span class="bu">str</span>] <span class="op">=</span> <span class="va">None</span></span></code></pre></div>
+</div>
+<h2 id="result">Result</h2>
+<p>When a program has been tested for its version, we need to store a result.</p>
+<div class="annotated-code">
+<p><span><em>«types»+</em></span></p>
+<div class="sourceCode" id="types"><pre class="sourceCode python"><code class="sourceCode python"><span id="types-1"><a href="#types-1"></a><span class="at">@dataclass</span></span>
+<span id="types-2"><a href="#types-2"></a><span class="kw">class</span> Result:</span>
+<span id="types-3"><a href="#types-3"></a>    test: VersionTest</span>
+<span id="types-4"><a href="#types-4"></a>    success: <span class="bu">bool</span></span>
+<span id="types-5"><a href="#types-5"></a>    failure_text: Optional[<span class="bu">str</span>] <span class="op">=</span> <span class="va">None</span></span>
+<span id="types-6"><a href="#types-6"></a>    found_version: Optional[Version] <span class="op">=</span> <span class="va">None</span></span></code></pre></div>
+</div>
+<h1 id="parsers">Parsers</h1>
+<p>Writing a parser becomes a lot easier if you remember this poem (from Graham Hutton):</p>
+<blockquote>
+<p>A parser for things<br />
+Is a function from strings<br />
+To lists of pairs<br />
+Of things and strings</p>
+</blockquote>
+<p>Since Python is not Haskell, we can get away with a parser returning a tuple of a thing and a string. The case where a parser fails, we throw an exception. The idea is that you give a function a string, then the function consumes part of this string, producing an object and returns the result together with the remainder of the input string.</p>
+<p>In this universe, one of the primive parsers is <code>split_at</code>, which will split a string at the first occurence of any of the given characters.</p>
+<div class="annotated-code">
+<p><span><em>«parsers»=</em></span></p>
+<div class="sourceCode" id="parsers"><pre class="sourceCode python"><code class="sourceCode python"><span id="parsers-1"><a href="#parsers-1"></a><span class="kw">def</span> split_at(split_chars: <span class="bu">str</span>, x: <span class="bu">str</span>) <span class="op">-&gt;</span> Tuple[<span class="bu">str</span>, <span class="bu">str</span>]:</span>
+<span id="parsers-2"><a href="#parsers-2"></a>    a <span class="op">=</span> x.split(split_chars, maxsplit<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="parsers-3"><a href="#parsers-3"></a>    <span class="cf">if</span> <span class="bu">len</span>(a) <span class="op">==</span> <span class="dv">2</span>:</span>
+<span id="parsers-4"><a href="#parsers-4"></a>        <span class="cf">return</span> a[<span class="dv">0</span>], a[<span class="dv">1</span>]</span>
+<span id="parsers-5"><a href="#parsers-5"></a>    <span class="cf">else</span>:</span>
+<span id="parsers-6"><a href="#parsers-6"></a>        <span class="cf">return</span> a[<span class="dv">0</span>], <span class="st">&quot;&quot;</span></span></code></pre></div>
+</div>
+<p>One step up, we can try to convert the first element returned by <code>split_at</code> with a function to some other type. We need a generic type variable to properly annotate this function.</p>
+<div class="annotated-code">
+<p><span><em>«types»+</em></span></p>
+<div class="sourceCode" id="types"><pre class="sourceCode python"><code class="sourceCode python"><span id="types-1"><a href="#types-1"></a>T <span class="op">=</span> TypeVar(<span class="st">&quot;T&quot;</span>)</span></code></pre></div>
+</div>
+<div class="annotated-code">
+<p><span><em>«parsers»+</em></span></p>
+<div class="sourceCode" id="parsers"><pre class="sourceCode python"><code class="sourceCode python"><span id="parsers-1"><a href="#parsers-1"></a><span class="kw">def</span> parse_split_f(split_chars: <span class="bu">str</span>, f: Callable[[<span class="bu">str</span>], T], x: <span class="bu">str</span>) <span class="op">\</span></span>
+<span id="parsers-2"><a href="#parsers-2"></a>        <span class="op">-&gt;</span> Tuple[T, <span class="bu">str</span>]:</span>
+<span id="parsers-3"><a href="#parsers-3"></a>    item, x <span class="op">=</span> split_at(split_chars, x)</span>
+<span id="parsers-4"><a href="#parsers-4"></a>    val <span class="op">=</span> f(item)</span>
+<span id="parsers-5"><a href="#parsers-5"></a>    <span class="cf">return</span> val, x</span></code></pre></div>
+</div>
+<p>Now we can parse a version string.</p>
+<div class="annotated-code">
+<p><span><em>«parsers»+</em></span></p>
+<div class="sourceCode" id="parsers"><pre class="sourceCode python"><code class="sourceCode python"><span id="parsers-1"><a href="#parsers-1"></a><span class="kw">def</span> parse_version(x: <span class="bu">str</span>) <span class="op">-&gt;</span> Tuple[Version, <span class="bu">str</span>]:</span>
+<span id="parsers-2"><a href="#parsers-2"></a>    _x <span class="op">=</span> x</span>
+<span id="parsers-3"><a href="#parsers-3"></a>    number <span class="op">=</span> []</span>
+<span id="parsers-4"><a href="#parsers-4"></a>    extra <span class="op">=</span> <span class="va">None</span></span>
+<span id="parsers-5"><a href="#parsers-5"></a></span>
+<span id="parsers-6"><a href="#parsers-6"></a>    <span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="parsers-7"><a href="#parsers-7"></a>        <span class="cf">try</span>:</span>
+<span id="parsers-8"><a href="#parsers-8"></a>            n, _x <span class="op">=</span> parse_split_f(<span class="st">&quot;.&quot;</span>, <span class="bu">int</span>, _x)</span>
+<span id="parsers-9"><a href="#parsers-9"></a>            number.append(n)</span>
+<span id="parsers-10"><a href="#parsers-10"></a>        <span class="cf">except</span> <span class="pp">ValueError</span>:</span>
+<span id="parsers-11"><a href="#parsers-11"></a>            <span class="cf">if</span> <span class="bu">len</span>(x) <span class="op">&gt;</span> <span class="dv">0</span>:</span>
+<span id="parsers-12"><a href="#parsers-12"></a>                m <span class="op">=</span> re.match(<span class="st">&quot;([0-9]*)(.*)&quot;</span>, _x)</span>
+<span id="parsers-13"><a href="#parsers-13"></a>                <span class="cf">if</span> lastn :<span class="op">=</span> m <span class="kw">and</span> m.group(<span class="dv">1</span>):</span>
+<span id="parsers-14"><a href="#parsers-14"></a>                    number.append(<span class="bu">int</span>(lastn))</span>
+<span id="parsers-15"><a href="#parsers-15"></a>                <span class="cf">if</span> suff :<span class="op">=</span> m <span class="kw">and</span> m.group(<span class="dv">2</span>):</span>
+<span id="parsers-16"><a href="#parsers-16"></a>                    extra <span class="op">=</span> suff <span class="kw">or</span> <span class="va">None</span></span>
+<span id="parsers-17"><a href="#parsers-17"></a>                <span class="cf">else</span>:</span>
+<span id="parsers-18"><a href="#parsers-18"></a>                    extra <span class="op">=</span> _x</span>
+<span id="parsers-19"><a href="#parsers-19"></a>            <span class="cf">break</span></span>
+<span id="parsers-20"><a href="#parsers-20"></a></span>
+<span id="parsers-21"><a href="#parsers-21"></a>    <span class="cf">if</span> <span class="kw">not</span> number:</span>
+<span id="parsers-22"><a href="#parsers-22"></a>        <span class="cf">raise</span> ParserError(<span class="ss">f&quot;A version needs a numeric component, got: </span><span class="sc">{x}</span><span class="ss">&quot;</span>)</span>
+<span id="parsers-23"><a href="#parsers-23"></a></span>
+<span id="parsers-24"><a href="#parsers-24"></a>    <span class="cf">return</span> Version(<span class="bu">tuple</span>(number), extra), _x</span></code></pre></div>
+</div>
+<p>To parse a relation, we look-up the enum from a symbol table.</p>
+<div class="annotated-code">
+<p><span><em>«parsers»+</em></span></p>
+<div class="sourceCode" id="parsers"><pre class="sourceCode python"><code class="sourceCode python"><span id="parsers-1"><a href="#parsers-1"></a><span class="kw">def</span> parse_relation(x: <span class="bu">str</span>) <span class="op">-&gt;</span> Tuple[Relation, <span class="bu">str</span>]:</span>
+<span id="parsers-2"><a href="#parsers-2"></a>    op_map <span class="op">=</span> {</span>
+<span id="parsers-3"><a href="#parsers-3"></a>        <span class="st">&quot;&lt;=&quot;</span>: Relation.LE,</span>
+<span id="parsers-4"><a href="#parsers-4"></a>        <span class="st">&quot;&gt;=&quot;</span>: Relation.GE,</span>
+<span id="parsers-5"><a href="#parsers-5"></a>        <span class="st">&quot;&lt;&quot;</span>: Relation.LT,</span>
+<span id="parsers-6"><a href="#parsers-6"></a>        <span class="st">&quot;&gt;&quot;</span>: Relation.GT,</span>
+<span id="parsers-7"><a href="#parsers-7"></a>        <span class="st">&quot;==&quot;</span>: Relation.EQ,</span>
+<span id="parsers-8"><a href="#parsers-8"></a>        <span class="st">&quot;!=&quot;</span>: Relation.NE}</span>
+<span id="parsers-9"><a href="#parsers-9"></a>    <span class="cf">for</span> sym, op <span class="kw">in</span> op_map.items():</span>
+<span id="parsers-10"><a href="#parsers-10"></a>        <span class="cf">if</span> x.startswith(sym):</span>
+<span id="parsers-11"><a href="#parsers-11"></a>            <span class="cf">return</span> (op, x[<span class="bu">len</span>(sym):])</span>
+<span id="parsers-12"><a href="#parsers-12"></a>    <span class="cf">raise</span> ParserError(<span class="ss">f&quot;Not a comparison operator: </span><span class="sc">{x}</span><span class="ss">&quot;</span>)</span></code></pre></div>
+</div>
+<p>We can now chain together the different parsers to parse a version constraint:</p>
+<div class="annotated-code">
+<p><span><em>«parsers»+</em></span></p>
+<div class="sourceCode" id="parsers"><pre class="sourceCode python"><code class="sourceCode python"><span id="parsers-1"><a href="#parsers-1"></a><span class="kw">def</span> parse_version_constraint(x: <span class="bu">str</span>) <span class="op">-&gt;</span> Tuple[VersionConstraint, <span class="bu">str</span>]:</span>
+<span id="parsers-2"><a href="#parsers-2"></a>    relation, x <span class="op">=</span> parse_relation(x)</span>
+<span id="parsers-3"><a href="#parsers-3"></a>    version, x <span class="op">=</span> parse_version(x)</span>
+<span id="parsers-4"><a href="#parsers-4"></a>    <span class="cf">return</span> VersionConstraint(version, relation), x</span></code></pre></div>
+</div>
+<h1 id="main">Main</h1>
+<h2 id="a-note-on-pythons-asyncio">A note on Python’s AsyncIO</h2>
+<p>The version tests are run asynchronously and with caching. This is a slightly non-trivial recipe. There will be simultaneous requests for the same result, so we need an <code>asyncio.Lock</code> to handle write-permission while the task is running. The problem with Python’s <code>asyncio</code> library (and why I have had a lot of trouble understanding its behaviour) is that it suffers from a leaky abstraction. The <code>async</code>/<code>await</code> keywords were put there to mimick Javascript syntax. Javascript is deeply asynchronous down to the core. The Javascript run-time doesn’t need a loop-manager because it <strong>is</strong> a loop manager. In Python however, we need to start a loop-manager before anything asynchronous can happen. The <code>asyncio.Lock</code> object talks directly to the loop-manager. This is why the loop-manager needs to be instantiated before any of the other <code>async</code> routines are. It feels very awkward to have features that are supported with <strong>syntax</strong> no less, to need an extra run-time element. Under the hood, the <code>async</code> keyword does nothing but change the syntax rules for the inner function body, and <code>await</code> is identical to <code>yield from</code>. Generators and (old style) coroutines I do understand. Using this knowledge, we can set a rule:</p>
+<blockquote>
+<p>Always instantiate <code>asyncio</code> related objects from within an <code>async</code> coroutine. The best way to achieve this is by writing a <code>main</code> function and instantiate objects within <code>main</code>.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1"></a><span class="cf">async</span> <span class="kw">def</span> main():</span>
+<span id="cb6-2"><a href="#cb6-2"></a>    <span class="co"># do everything here</span></span>
+<span id="cb6-3"><a href="#cb6-3"></a></span>
+<span id="cb6-4"><a href="#cb6-4"></a>asyncio.run(main())</span></code></pre></div>
+</blockquote>
+<p>Let’s have a counter example: given a <code>mountain</code> of work that needs to pass through the <code>compute</code> coroutine. Suppose some of these computations overlap, and we need a <code>Lock</code> to synchronize. One might do</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1"></a><span class="at">@dataclass</span></span>
+<span id="cb7-2"><a href="#cb7-2"></a><span class="kw">class</span> Work:</span>
+<span id="cb7-3"><a href="#cb7-3"></a>    args: Any</span>
+<span id="cb7-4"><a href="#cb7-4"></a>    lock: asyncio.Lock <span class="op">=</span> field(default_factory<span class="op">=</span>asyncio.Lock)</span>
+<span id="cb7-5"><a href="#cb7-5"></a>    result: Any <span class="op">=</span> <span class="va">None</span></span>
+<span id="cb7-6"><a href="#cb7-6"></a></span>
+<span id="cb7-7"><a href="#cb7-7"></a>all_my_work <span class="op">=</span> [compute(Work(w)) <span class="cf">for</span> w <span class="kw">in</span> mountain]</span>
+<span id="cb7-8"><a href="#cb7-8"></a>asyncio.run(asyncio.gather(<span class="op">*</span>all_my_work))</span></code></pre></div>
+<p>This will result in an error, even though the code looks fine on the surface. The problem is that <code>asyncio.run</code> initiates a new loop-manager. Meanwhile the <code>Lock</code> objects have been initialized without knowledge of the loop-manager, and they have no way to hook in. To fix this, write:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1"></a><span class="cf">async</span> <span class="kw">def</span> main():</span>
+<span id="cb8-2"><a href="#cb8-2"></a>    all_my_work <span class="op">=</span> [compute(Work(w)) <span class="cf">for</span> w <span class="kw">in</span> mountain]</span>
+<span id="cb8-3"><a href="#cb8-3"></a>    <span class="cf">await</span> asyncio.gather(<span class="op">*</span>all_my_work)</span>
+<span id="cb8-4"><a href="#cb8-4"></a></span>
+<span id="cb8-5"><a href="#cb8-5"></a>asyncio.run(main())</span></code></pre></div>
+<p>These kind of quirks are not so well documented.</p>
+<h2 id="caching-a-test">Caching a test</h2>
+<p>We won’t be too generic in implementing this. We assume the following decorator is used on a single method in a class that has the <code>_lock</code> and <code>_done</code> fields defined. This decorator then makes sure that the method is only ever executed once.</p>
+<div class="annotated-code">
+<p><span><em>«async-cache»=</em></span></p>
+<div class="sourceCode" id="async-cache"><pre class="sourceCode python"><code class="sourceCode python"><span id="async-cache-1"><a href="#async-cache-1"></a><span class="kw">def</span> async_cache(f):</span>
+<span id="async-cache-2"><a href="#async-cache-2"></a>    <span class="cf">async</span> <span class="kw">def</span> g(<span class="va">self</span>, <span class="op">*</span>args, <span class="op">**</span>kwargs):</span>
+<span id="async-cache-3"><a href="#async-cache-3"></a>        <span class="cf">async</span> <span class="cf">with</span> <span class="va">self</span>._lock:</span>
+<span id="async-cache-4"><a href="#async-cache-4"></a>            <span class="cf">if</span> <span class="va">self</span>._done:</span>
+<span id="async-cache-5"><a href="#async-cache-5"></a>                <span class="cf">return</span> <span class="va">self</span>._result</span>
+<span id="async-cache-6"><a href="#async-cache-6"></a>            <span class="va">self</span>._result <span class="op">=</span> <span class="cf">await</span> f(<span class="va">self</span>, <span class="op">*</span>args, <span class="op">**</span>kwargs)</span>
+<span id="async-cache-7"><a href="#async-cache-7"></a>            <span class="va">self</span>._done <span class="op">=</span> <span class="va">True</span></span>
+<span id="async-cache-8"><a href="#async-cache-8"></a>            <span class="cf">return</span> <span class="va">self</span>._result</span>
+<span id="async-cache-9"><a href="#async-cache-9"></a>    <span class="cf">return</span> g</span></code></pre></div>
+</div>
+<p>Now we can apply the decorator to the <code>run</code> method in <code>VersionTest</code>.</p>
+<div class="annotated-code">
+<p><span><em>«version-test-run»=</em></span></p>
+<div class="sourceCode" id="version-test-run"><pre class="sourceCode python"><code class="sourceCode python"><span id="version-test-run-1"><a href="#version-test-run-1"></a>_lock: asyncio.Lock <span class="op">=</span> field(default_factory<span class="op">=</span>asyncio.Lock)</span>
+<span id="version-test-run-2"><a href="#version-test-run-2"></a>_done: <span class="bu">bool</span> <span class="op">=</span> <span class="va">False</span></span>
+<span id="version-test-run-3"><a href="#version-test-run-3"></a></span>
+<span id="version-test-run-4"><a href="#version-test-run-4"></a><span class="at">@async_cache</span></span>
+<span id="version-test-run-5"><a href="#version-test-run-5"></a><span class="cf">async</span> <span class="kw">def</span> run(<span class="va">self</span>, recurse):</span>
+<span id="version-test-run-6"><a href="#version-test-run-6"></a>    <span class="cf">for</span> dep <span class="kw">in</span> <span class="va">self</span>.depends:</span>
+<span id="version-test-run-7"><a href="#version-test-run-7"></a>        <span class="cf">if</span> <span class="kw">not</span> <span class="cf">await</span> recurse(dep):</span>
+<span id="version-test-run-8"><a href="#version-test-run-8"></a>            <span class="cf">return</span> Result(<span class="va">self</span>, <span class="va">False</span>,</span>
+<span id="version-test-run-9"><a href="#version-test-run-9"></a>                          failure_text<span class="op">=</span><span class="ss">f&quot;Failed dependency: </span><span class="sc">{</span>dep<span class="sc">}</span><span class="ss">&quot;</span>)</span>
+<span id="version-test-run-10"><a href="#version-test-run-10"></a></span>
+<span id="version-test-run-11"><a href="#version-test-run-11"></a>    col1 <span class="op">=</span> <span class="ss">f&quot;</span><span class="sc">{</span><span class="va">self</span><span class="sc">.</span>name<span class="sc">}</span><span class="ss"> </span><span class="sc">{</span><span class="va">self</span><span class="sc">.</span>require<span class="sc">}</span><span class="ss">&quot;</span></span>
+<span id="version-test-run-12"><a href="#version-test-run-12"></a>    proc <span class="op">=</span> <span class="cf">await</span> asyncio.create_subprocess_shell(</span>
+<span id="version-test-run-13"><a href="#version-test-run-13"></a>        <span class="va">self</span>.get_version,</span>
+<span id="version-test-run-14"><a href="#version-test-run-14"></a>        stdout<span class="op">=</span>asyncio.subprocess.PIPE,</span>
+<span id="version-test-run-15"><a href="#version-test-run-15"></a>        stderr<span class="op">=</span>asyncio.subprocess.PIPE)</span>
+<span id="version-test-run-16"><a href="#version-test-run-16"></a>    (stdout, stderr) <span class="op">=</span> <span class="cf">await</span> proc.communicate()</span>
+<span id="version-test-run-17"><a href="#version-test-run-17"></a>    <span class="cf">if</span> proc.returncode <span class="op">!=</span> <span class="dv">0</span>:</span>
+<span id="version-test-run-18"><a href="#version-test-run-18"></a>        <span class="bu">print</span>(<span class="ss">f&quot;</span><span class="sc">{</span>col1<span class="sc">:25}</span><span class="ss">: not found&quot;</span>)</span>
+<span id="version-test-run-19"><a href="#version-test-run-19"></a>        <span class="cf">return</span> Result(</span>
+<span id="version-test-run-20"><a href="#version-test-run-20"></a>            <span class="va">self</span>,</span>
+<span id="version-test-run-21"><a href="#version-test-run-21"></a>            success<span class="op">=</span><span class="va">False</span>,</span>
+<span id="version-test-run-22"><a href="#version-test-run-22"></a>            failure_text<span class="op">=</span><span class="ss">f&quot;</span><span class="sc">{</span>stderr<span class="sc">.</span>decode()<span class="sc">.</span>strip()<span class="sc">}</span><span class="ss">&quot;</span>)</span>
+<span id="version-test-run-23"><a href="#version-test-run-23"></a>    <span class="cf">try</span>:</span>
+<span id="version-test-run-24"><a href="#version-test-run-24"></a>        <span class="cf">if</span> <span class="va">self</span>.pattern <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</span>
+<span id="version-test-run-25"><a href="#version-test-run-25"></a>            m <span class="op">=</span> re.match(<span class="va">self</span>.pattern, stdout.decode())</span>
+<span id="version-test-run-26"><a href="#version-test-run-26"></a>            out, _ <span class="op">=</span> parse_version(m.group(<span class="dv">1</span>).strip())</span>
+<span id="version-test-run-27"><a href="#version-test-run-27"></a>        <span class="cf">else</span>:</span>
+<span id="version-test-run-28"><a href="#version-test-run-28"></a>            out, _ <span class="op">=</span> parse_version(stdout.decode().strip())</span>
+<span id="version-test-run-29"><a href="#version-test-run-29"></a>    <span class="cf">except</span> ConfigError <span class="im">as</span> e:</span>
+<span id="version-test-run-30"><a href="#version-test-run-30"></a>        <span class="cf">return</span> Result(<span class="va">self</span>, <span class="va">False</span>, failure_text<span class="op">=</span><span class="bu">str</span>(e))</span>
+<span id="version-test-run-31"><a href="#version-test-run-31"></a></span>
+<span id="version-test-run-32"><a href="#version-test-run-32"></a>    <span class="cf">if</span> <span class="va">self</span>.require(out):</span>
+<span id="version-test-run-33"><a href="#version-test-run-33"></a>        <span class="bu">print</span>(<span class="ss">f&quot;</span><span class="sc">{</span>col1<span class="sc">:25}</span><span class="ss">: </span><span class="sc">{</span><span class="bu">str</span>(out)<span class="sc">:10}</span><span class="ss"> Ok&quot;</span>)</span>
+<span id="version-test-run-34"><a href="#version-test-run-34"></a>        <span class="cf">return</span> Result(<span class="va">self</span>, <span class="va">True</span>)</span>
+<span id="version-test-run-35"><a href="#version-test-run-35"></a>    <span class="cf">else</span>:</span>
+<span id="version-test-run-36"><a href="#version-test-run-36"></a>        <span class="bu">print</span>(<span class="ss">f&quot;</span><span class="sc">{</span>col1<span class="sc">:25}</span><span class="ss">: </span><span class="sc">{</span><span class="bu">str</span>(out)<span class="sc">:10}</span><span class="ss"> Fail&quot;</span>)</span>
+<span id="version-test-run-37"><a href="#version-test-run-37"></a>        <span class="cf">return</span> Result(<span class="va">self</span>, <span class="va">False</span>, failure_text<span class="op">=</span><span class="st">&quot;Too old.&quot;</span>,</span>
+<span id="version-test-run-38"><a href="#version-test-run-38"></a>                      found_version<span class="op">=</span>out)</span></code></pre></div>
+</div>
+<h2 id="reading-the-configuration">Reading the configuration</h2>
+<div class="annotated-code">
+<p><span><em>«helper-functions»=</em></span></p>
+<div class="sourceCode" id="helper-functions"><pre class="sourceCode python"><code class="sourceCode python"><span id="helper-functions-1"><a href="#helper-functions-1"></a><span class="kw">def</span> read_config(name: <span class="bu">str</span>, config: Mapping[<span class="bu">str</span>, <span class="bu">str</span>], templates):</span>
+<span id="helper-functions-2"><a href="#helper-functions-2"></a>    <span class="cf">if</span> <span class="st">&quot;template&quot;</span> <span class="kw">in</span> config:</span>
+<span id="helper-functions-3"><a href="#helper-functions-3"></a>        _config <span class="op">=</span> {}</span>
+<span id="helper-functions-4"><a href="#helper-functions-4"></a>        <span class="cf">for</span> k, v <span class="kw">in</span> templates[config[<span class="st">&quot;template&quot;</span>]].items():</span>
+<span id="helper-functions-5"><a href="#helper-functions-5"></a>            <span class="cf">if</span> <span class="bu">isinstance</span>(v, <span class="bu">str</span>):</span>
+<span id="helper-functions-6"><a href="#helper-functions-6"></a>                _config[k] <span class="op">=</span> v.<span class="bu">format</span>(name<span class="op">=</span>name)</span>
+<span id="helper-functions-7"><a href="#helper-functions-7"></a>            <span class="cf">else</span>:</span>
+<span id="helper-functions-8"><a href="#helper-functions-8"></a>                _config[k] <span class="op">=</span> v</span>
+<span id="helper-functions-9"><a href="#helper-functions-9"></a>        _config.update(config)</span>
+<span id="helper-functions-10"><a href="#helper-functions-10"></a>    <span class="cf">else</span>:</span>
+<span id="helper-functions-11"><a href="#helper-functions-11"></a>        _config <span class="op">=</span> <span class="bu">dict</span>(config)</span>
+<span id="helper-functions-12"><a href="#helper-functions-12"></a></span>
+<span id="helper-functions-13"><a href="#helper-functions-13"></a>    _deps <span class="op">=</span> <span class="bu">map</span>(<span class="bu">str</span>.strip, _config.get(<span class="st">&quot;depends&quot;</span>, <span class="st">&quot;&quot;</span>).split(<span class="st">&quot;,&quot;</span>))</span>
+<span id="helper-functions-14"><a href="#helper-functions-14"></a>    deps <span class="op">=</span> <span class="bu">list</span>(<span class="bu">filter</span>(<span class="kw">lambda</span> x: x <span class="op">!=</span> <span class="st">&quot;&quot;</span>, _deps))</span>
+<span id="helper-functions-15"><a href="#helper-functions-15"></a></span>
+<span id="helper-functions-16"><a href="#helper-functions-16"></a>    <span class="cf">assert</span> <span class="st">&quot;require&quot;</span> <span class="kw">in</span> _config, <span class="st">&quot;Every item needs a `require` field&quot;</span></span>
+<span id="helper-functions-17"><a href="#helper-functions-17"></a>    <span class="cf">assert</span> <span class="st">&quot;get_version&quot;</span> <span class="kw">in</span> _config, <span class="st">&quot;Every item needs a `get_version` field&quot;</span></span>
+<span id="helper-functions-18"><a href="#helper-functions-18"></a></span>
+<span id="helper-functions-19"><a href="#helper-functions-19"></a>    require, _ <span class="op">=</span> parse_version_constraint(_config[<span class="st">&quot;require&quot;</span>])</span>
+<span id="helper-functions-20"><a href="#helper-functions-20"></a></span>
+<span id="helper-functions-21"><a href="#helper-functions-21"></a>    <span class="cf">return</span> VersionTest(</span>
+<span id="helper-functions-22"><a href="#helper-functions-22"></a>        name<span class="op">=</span>name,</span>
+<span id="helper-functions-23"><a href="#helper-functions-23"></a>        require<span class="op">=</span>require,</span>
+<span id="helper-functions-24"><a href="#helper-functions-24"></a>        get_version<span class="op">=</span>_config[<span class="st">&quot;get_version&quot;</span>],</span>
+<span id="helper-functions-25"><a href="#helper-functions-25"></a>        <span class="co"># platform=_config.get(&quot;platform&quot;, None),</span></span>
+<span id="helper-functions-26"><a href="#helper-functions-26"></a>        pattern<span class="op">=</span>_config.get(<span class="st">&quot;pattern&quot;</span>, <span class="va">None</span>),</span>
+<span id="helper-functions-27"><a href="#helper-functions-27"></a>        suggestion_text<span class="op">=</span>_config.get(<span class="st">&quot;suggestion_text&quot;</span>, <span class="va">None</span>),</span>
+<span id="helper-functions-28"><a href="#helper-functions-28"></a>        suggestion<span class="op">=</span>_config.get(<span class="st">&quot;suggestion&quot;</span>, <span class="va">None</span>),</span>
+<span id="helper-functions-29"><a href="#helper-functions-29"></a>        depends<span class="op">=</span>deps,</span>
+<span id="helper-functions-30"><a href="#helper-functions-30"></a>        template<span class="op">=</span>_config.get(<span class="st">&quot;template&quot;</span>, <span class="va">None</span>))</span></code></pre></div>
+</div>
+<h2 id="indenting-output">Indenting output</h2>
+<p>To indent output in a context manager.</p>
+<div class="annotated-code">
+<p><span><em>«imports»+</em></span></p>
+<div class="sourceCode" id="imports"><pre class="sourceCode python"><code class="sourceCode python"><span id="imports-1"><a href="#imports-1"></a><span class="im">from</span> contextlib <span class="im">import</span> contextmanager, redirect_stdout</span>
+<span id="imports-2"><a href="#imports-2"></a><span class="im">import</span> textwrap</span></code></pre></div>
+</div>
+<div class="annotated-code">
+<p><span><em>«helper-functions»+</em></span></p>
+<div class="sourceCode" id="helper-functions"><pre class="sourceCode python"><code class="sourceCode python"><span id="helper-functions-1"><a href="#helper-functions-1"></a><span class="at">@contextmanager</span></span>
+<span id="helper-functions-2"><a href="#helper-functions-2"></a><span class="kw">def</span> indent(prefix: <span class="bu">str</span>):</span>
+<span id="helper-functions-3"><a href="#helper-functions-3"></a>    f <span class="op">=</span> io.StringIO()</span>
+<span id="helper-functions-4"><a href="#helper-functions-4"></a>    <span class="cf">with</span> redirect_stdout(f):</span>
+<span id="helper-functions-5"><a href="#helper-functions-5"></a>        <span class="cf">yield</span></span>
+<span id="helper-functions-6"><a href="#helper-functions-6"></a>    output <span class="op">=</span> f.getvalue()</span>
+<span id="helper-functions-7"><a href="#helper-functions-7"></a>    <span class="bu">print</span>(textwrap.indent(output, prefix), end<span class="op">=</span><span class="st">&quot;&quot;</span>)</span></code></pre></div>
+</div>
+<h2 id="main-internal">Main internal</h2>
+<div class="annotated-code">
+<p><span><em>«main»=</em></span></p>
+<div class="sourceCode" id="main"><pre class="sourceCode python"><code class="sourceCode python"><span id="main-1"><a href="#main-1"></a>config <span class="op">=</span> configparser.ConfigParser()</span>
+<span id="main-2"><a href="#main-2"></a>config.read(<span class="st">&quot;dependencies.ini&quot;</span>)</span>
+<span id="main-3"><a href="#main-3"></a></span>
+<span id="main-4"><a href="#main-4"></a>templates <span class="op">=</span> {</span>
+<span id="main-5"><a href="#main-5"></a>    name[<span class="dv">9</span>:]: config[name]</span>
+<span id="main-6"><a href="#main-6"></a>    <span class="cf">for</span> name <span class="kw">in</span> config <span class="cf">if</span> name.startswith(<span class="st">&quot;template:&quot;</span>)</span>
+<span id="main-7"><a href="#main-7"></a>}</span>
+<span id="main-8"><a href="#main-8"></a></span>
+<span id="main-9"><a href="#main-9"></a><span class="cf">try</span>:</span>
+<span id="main-10"><a href="#main-10"></a>    tests <span class="op">=</span> {</span>
+<span id="main-11"><a href="#main-11"></a>        name: read_config(name, config[name], templates)</span>
+<span id="main-12"><a href="#main-12"></a>        <span class="cf">for</span> name <span class="kw">in</span> config <span class="cf">if</span> <span class="st">&quot;:&quot;</span> <span class="kw">not</span> <span class="kw">in</span> name <span class="kw">and</span> name <span class="op">!=</span> <span class="st">&quot;DEFAULT&quot;</span></span>
+<span id="main-13"><a href="#main-13"></a>    }</span>
+<span id="main-14"><a href="#main-14"></a><span class="cf">except</span> (<span class="pp">AssertionError</span>, ConfigError) <span class="im">as</span> e:</span>
+<span id="main-15"><a href="#main-15"></a>    <span class="bu">print</span>(<span class="st">&quot;Configuration error:&quot;</span>, e)</span>
+<span id="main-16"><a href="#main-16"></a>    sys.exit(<span class="dv">1</span>)</span>
+<span id="main-17"><a href="#main-17"></a></span>
+<span id="main-18"><a href="#main-18"></a><span class="cf">async</span> <span class="kw">def</span> test_version(name: <span class="bu">str</span>):</span>
+<span id="main-19"><a href="#main-19"></a>    <span class="cf">assert</span> name <span class="kw">in</span> tests, <span class="ss">f&quot;unknown dependency </span><span class="sc">{</span>name<span class="sc">}</span><span class="ss">&quot;</span></span>
+<span id="main-20"><a href="#main-20"></a>    x <span class="op">=</span> <span class="cf">await</span> tests[name].run(test_version)</span>
+<span id="main-21"><a href="#main-21"></a>    <span class="cf">return</span> x</span>
+<span id="main-22"><a href="#main-22"></a></span>
+<span id="main-23"><a href="#main-23"></a>result <span class="op">=</span> <span class="cf">await</span> asyncio.gather(<span class="op">*</span>(test_version(k) <span class="cf">for</span> k <span class="kw">in</span> tests))</span>
+<span id="main-24"><a href="#main-24"></a><span class="cf">if</span> <span class="bu">all</span>(r.success <span class="cf">for</span> r <span class="kw">in</span> result):</span>
+<span id="main-25"><a href="#main-25"></a>    <span class="bu">print</span>(<span class="st">&quot;Success&quot;</span>)</span>
+<span id="main-26"><a href="#main-26"></a>    sys.exit(<span class="dv">0</span>)</span>
+<span id="main-27"><a href="#main-27"></a><span class="cf">else</span>:</span>
+<span id="main-28"><a href="#main-28"></a>    <span class="bu">print</span>(<span class="st">&quot;Failure&quot;</span>)</span>
+<span id="main-29"><a href="#main-29"></a>    <span class="cf">with</span> indent(<span class="st">&quot;  |  &quot;</span>):</span>
+<span id="main-30"><a href="#main-30"></a>        <span class="cf">for</span> r <span class="kw">in</span> (r <span class="cf">for</span> r <span class="kw">in</span> result <span class="cf">if</span> <span class="kw">not</span> r.success):</span>
+<span id="main-31"><a href="#main-31"></a>            <span class="cf">if</span> r.failure_text:</span>
+<span id="main-32"><a href="#main-32"></a>                <span class="bu">print</span>(<span class="ss">f&quot;</span><span class="sc">{r.</span>test<span class="sc">.</span>name<span class="sc">}</span><span class="ss">: </span><span class="sc">{r.</span>failure_text<span class="sc">}</span><span class="ss">&quot;</span>)</span>
+<span id="main-33"><a href="#main-33"></a>            <span class="cf">if</span> r.found_version:</span>
+<span id="main-34"><a href="#main-34"></a>                <span class="bu">print</span>(<span class="ss">f&quot;    found version </span><span class="sc">{r.</span>found_version<span class="sc">}</span><span class="ss">&quot;</span>)</span>
+<span id="main-35"><a href="#main-35"></a>    sys.exit(<span class="dv">1</span>)</span></code></pre></div>
+</div>
+</div></main>
+
+
+
+<!-- Bootstrap 4.5.0 -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+
+<!-- Mathjax -->
+</body>
+</html>
