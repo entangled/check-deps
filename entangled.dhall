@@ -6,7 +6,7 @@ let languages = entangled.languages #
    ]
 
 in { entangled = entangled.Config :: { database = Some ".entangled/db.sqlite"
-                                     , watchList = [ "lit/*.md" ] : List Text
+                                     , watchList = [ "README.md", "lit/*.md" ] : List Text
                                      , languages = languages
                                      }
    }

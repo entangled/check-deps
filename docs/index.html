@@ -95,7 +95,7 @@ code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warni
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
   </button>
-  <a href="#" class="ml-5 mr-auto navbar-brand">Dependecy checker in Python<br><span style="font-size: smaller"> 
+  <a href="#" class="ml-5 mr-auto navbar-brand">Dependecy checker in Python<br><span style="font-size: smaller">adventures with asyncio 
         by <i>Johan Hidding</i></span></a>
 <div class="collapse navbar-collapse" id="navbarSupportedContent">
 <ul>
@@ -109,12 +109,15 @@ code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warni
 </nav>
 
 <!-- <nav class="navbar navbar-dark navbar-expand-md bg-dark mb-4">
+<p class="subtitle">adventures with asyncio</p>
 <p class="author">Johan Hidding</p>
 </nav>
  -->
 
 <main role="main" class="flex-fill"><div class="container my-5">
-<p>It struck me that, to get an Entangled/Bootstrap project to work, you need quite a few things installed. I wanted to have a script that checks all the dependencies and then reports back to the user. This script should follow these guidelines:</p>
+<p><a href="https://entangled.github.io/"><img src="https://img.shields.io/badge/entangled-Use%20the%20source!-%2300aeff" alt="Entangled badge" /></a></p>
+<p>This is a literate program. The complete source code to this program is contained in the text of this document. You can view a web-friendly version at <a href="https://entangled.github.io/check-deps">entangled.github.io/check-deps</a>.</p>
+<p>It struck me that, to get an <a href="https://entangled.github.io/tutorial.html">Entangled/Bootstrap project</a> to work, you need quite a few things installed. I wanted to have a script that checks all the dependencies and then reports back to the user. This script should follow these guidelines:</p>
 <ul>
 <li>require very little to run: It is beyond my Bash skills to implement this in pure Bash, so instead I settled on vanilla <strong>Python</strong>.</li>
 <li>be configurable: Python has a builtin parser for <code>ini</code> files.</li>
@@ -156,6 +159,7 @@ code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb4-2"><a href="#cb4-2"></a><span class="dt">template </span><span class="ot">=</span><span class="st"> pip</span></span>
 <span id="cb4-3"><a href="#cb4-3"></a><span class="dt">require </span><span class="ot">=</span><span class="st"> &gt;=</span><span class="fl">1.0</span></span></code></pre></div>
 </div>
+<p>When any dependency is missing, the script should print a friendly message informing the user how to proceed.</p>
 <h1 id="overview">Overview</h1>
 <p>The script looks as follows</p>
 <div class="annotated-code">

@@ -18,7 +18,7 @@
 #
 # You should list the Markdown sources here in the order that they should
 # appear.
-input_files := lit/index.md
+input_files := README.md lit/index.md
 
 # Arguments to Pandoc; these are reasonable defaults
 pandoc_args += --template bootstrap/template.html
@@ -58,7 +58,7 @@ watch:
 
 watch-pandoc:
 	@while true; do \
-		inotifywait -e close_write bootstrap lit Makefile; \
+		inotifywait -e close_write bootstrap lit Makefile README.md; \
 		make site; \
 	done
 
